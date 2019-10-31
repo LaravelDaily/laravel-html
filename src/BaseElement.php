@@ -351,6 +351,10 @@ abstract class BaseElement implements Htmlable, HtmlElement
             ? '<'.$this->tag.'>'
             : "<{$this->tag} {$this->attributes->render()}>";
 
+        $this->isVoidElement()
+            ? ''
+            : $tag = $tag."\n";
+
         $children = $this->children->map(function ($child): string {
             if ($child instanceof HtmlElement) {
                 return $child->render();
@@ -378,7 +382,7 @@ abstract class BaseElement implements Htmlable, HtmlElement
         return new HtmlString(
             $this->isVoidElement()
                 ? ''
-                : "</{$this->tag}>"
+                : "\n</{$this->tag}>\n"
         );
     }
 
