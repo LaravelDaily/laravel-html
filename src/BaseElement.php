@@ -27,6 +27,11 @@ abstract class BaseElement implements Htmlable, HtmlElement
     /** @var \Illuminate\Support\Collection */
     protected $children;
 
+    /**
+     * @var array
+     */
+    protected $stack;
+
     public function __construct()
     {
         if (empty($this->tag)) {
@@ -35,6 +40,7 @@ abstract class BaseElement implements Htmlable, HtmlElement
 
         $this->attributes = new Attributes();
         $this->children = new Collection();
+        $this->stack = [];
     }
 
     public static function create()
@@ -351,9 +357,7 @@ abstract class BaseElement implements Htmlable, HtmlElement
             ? '<'.$this->tag.'>'
             : "<{$this->tag} {$this->attributes->render()}>";
 
-        $this->isVoidElement()
-            ? ''
-            : $tag = $tag."\n";
+        $this->stack[] = $tag;
 
         $children = $this->children->map(function ($child): string {
             if ($child instanceof HtmlElement) {
@@ -369,9 +373,11 @@ abstract class BaseElement implements Htmlable, HtmlElement
             }
 
             throw InvalidChild::childMustBeAnHtmlElementOrAString();
-        })->implode('');
+        })->each(function ($child) {
+            $this->stack[] = $child;
+        });
 
-        return new HtmlString($tag.$children);
+        return new HtmlString(implode("\n", $this->stack));
     }
 
     /**
@@ -379,10 +385,14 @@ abstract class BaseElement implements Htmlable, HtmlElement
      */
     public function close()
     {
+        if (!$this->isVoidElement()) {
+            $this->stack[] = "</{$this->tag}>";
+        }
+
         return new HtmlString(
             $this->isVoidElement()
                 ? ''
-                : "\n</{$this->tag}>\n"
+                : "</{$this->tag}>"
         );
     }
 
@@ -391,8 +401,11 @@ abstract class BaseElement implements Htmlable, HtmlElement
      */
     public function render()
     {
+        $this->open();
+        $this->close();
+
         return new HtmlString(
-            $this->open().$this->close()
+            implode("\n", $this->stack)
         );
     }
 
