@@ -27,7 +27,7 @@ class Attributes
 
             if (is_int($attribute)) {
                 $attribute = $value;
-                $value = '';
+                $value     = '';
             }
 
             $this->setAttribute($attribute, (string) $value);
@@ -148,7 +148,7 @@ class Attributes
                 continue;
             }
 
-            $value = htmlentities($value, ENT_QUOTES, 'UTF-8', false);
+            // $value = htmlentities($value, ENT_QUOTES, 'UTF-8', false);
 
             $attributeStrings[] = "{$attribute}=\"{$value}\"";
         }
