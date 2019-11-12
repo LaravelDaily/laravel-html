@@ -368,8 +368,6 @@ abstract class BaseElement implements Htmlable, HtmlElement
             ? '<'.$this->tag.'>'
             : "<{$this->tag} {$this->attributes->render()}>";
 
-        $this->stack[] = $tag;
-
         $children = $this->children->map(function ($child): string {
             if ($child instanceof HtmlElement) {
                 return $child->render();
@@ -384,11 +382,18 @@ abstract class BaseElement implements Htmlable, HtmlElement
             }
 
             throw InvalidChild::childMustBeAnHtmlElementOrAString();
-        })->each(function ($child) {
-            $this->stack[] = $child;
         });
 
         $this->hasOpen = True;
+
+        if ($this->isInlineElement()) {
+            $this->stack[] = $tag . implode("\n", $children->toArray()) . $this->close();
+        } else {
+            $this->stack[] = $tag;
+            $children->each(function ($child) {
+                $this->stack[] = $child;
+            });
+        }
 
         return new HtmlString(implode("\n", $this->stack));
     }
@@ -406,7 +411,7 @@ abstract class BaseElement implements Htmlable, HtmlElement
             );
         }
 
-        if (!$this->isVoidElement()) {
+        if (!$this->isVoidElement() && !$this->isInlineElement()) {
             $this->stack[] = "</{$this->tag}>";
         }
 
@@ -439,6 +444,11 @@ abstract class BaseElement implements Htmlable, HtmlElement
             'img', 'input', 'keygen', 'link', 'menuitem',
             'meta', 'param', 'source', 'track', 'wbr',
         ]);
+    }
+
+    public function isInlineElement(): bool
+    {
+        return in_array($this->tag, ['span', 'label', 'option']);
     }
 
     /**
