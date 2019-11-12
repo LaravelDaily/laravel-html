@@ -32,6 +32,10 @@ abstract class BaseElement implements Htmlable, HtmlElement
      */
     protected $stack;
 
+    protected $hasOpen;
+
+    protected $hasClose;
+
     public function __construct()
     {
         if (empty($this->tag)) {
@@ -41,6 +45,9 @@ abstract class BaseElement implements Htmlable, HtmlElement
         $this->attributes = new Attributes();
         $this->children = new Collection();
         $this->stack = [];
+
+        $this->hasOpen = False;
+        $this->hasClose = False;
     }
 
     public static function create()
@@ -353,6 +360,10 @@ abstract class BaseElement implements Htmlable, HtmlElement
      */
     public function open()
     {
+        if ($this->hasOpen) {
+            return new HtmlString(implode("\n", $this->stack));
+        }
+
         $tag = $this->attributes->isEmpty()
             ? '<'.$this->tag.'>'
             : "<{$this->tag} {$this->attributes->render()}>";
@@ -377,6 +388,8 @@ abstract class BaseElement implements Htmlable, HtmlElement
             $this->stack[] = $child;
         });
 
+        $this->hasOpen = True;
+
         return new HtmlString(implode("\n", $this->stack));
     }
 
@@ -385,9 +398,19 @@ abstract class BaseElement implements Htmlable, HtmlElement
      */
     public function close()
     {
+        if ($this->hasClose) {
+            return new HtmlString(
+                $this->isVoidElement()
+                    ? ''
+                    : "</{$this->tag}>"
+            );
+        }
+
         if (!$this->isVoidElement()) {
             $this->stack[] = "</{$this->tag}>";
         }
+
+        $this->hasClose = True;
 
         return new HtmlString(
             $this->isVoidElement()
