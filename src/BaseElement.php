@@ -387,7 +387,7 @@ abstract class BaseElement implements Htmlable, HtmlElement
         $this->hasOpen = True;
 
         if ($this->isInlineElement()) {
-            $this->stack[] = $tag . implode("\n", $children->toArray()) . $this->close();
+            $this->stack[] = $tag . implode('', $children->toArray()) . $this->close();
         } else {
             $this->stack[] = $tag;
             $children->each(function ($child) {
