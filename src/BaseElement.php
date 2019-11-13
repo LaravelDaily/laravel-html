@@ -448,7 +448,7 @@ abstract class BaseElement implements Htmlable, HtmlElement
 
     public function isInlineElement(): bool
     {
-        return in_array($this->tag, ['span', 'label', 'option']);
+        return in_array($this->tag, ['span', 'label', 'option', 'textarea']);
     }
 
     /**
