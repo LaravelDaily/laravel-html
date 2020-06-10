@@ -36,6 +36,8 @@ abstract class BaseElement implements Htmlable, HtmlElement
 
     protected $hasClose;
 
+    protected $isVoid;
+
     public function __construct()
     {
         if (empty($this->tag)) {
@@ -48,6 +50,7 @@ abstract class BaseElement implements Htmlable, HtmlElement
 
         $this->hasOpen = False;
         $this->hasClose = False;
+        $this->isVoid = False;
     }
 
     public static function create()
@@ -66,6 +69,15 @@ abstract class BaseElement implements Htmlable, HtmlElement
         $element = clone $this;
 
         $element->attributes->setAttribute($attribute, (string) $value);
+
+        return $element;
+    }
+
+    public function selfClose()
+    {
+        $element = clone $this;
+
+        $element->isVoid = True;
 
         return $element;
     }
@@ -364,9 +376,21 @@ abstract class BaseElement implements Htmlable, HtmlElement
             return new HtmlString(implode("\n", $this->stack));
         }
 
-        $tag = $this->attributes->isEmpty()
-            ? '<'.$this->tag.'>'
-            : "<{$this->tag} {$this->attributes->render()}>";
+        $tag = '';
+
+        if ($this->attributes->isEmpty()) {
+            if ($this->isVoid) {
+                $tag = '<'.$this->tag.'/>';
+            } else {
+                $tag = '<'.$this->tag.'>';
+            }
+        } else {
+            if ($this->isVoid) {
+                $tag = "<{$this->tag} {$this->attributes->render()}/>";
+            } else {
+                $tag = "<{$this->tag} {$this->attributes->render()}>";
+            }
+        }
 
         $children = $this->children->map(function ($child): string {
             if ($child instanceof HtmlElement) {
@@ -439,7 +463,7 @@ abstract class BaseElement implements Htmlable, HtmlElement
 
     public function isVoidElement(): bool
     {
-        return in_array($this->tag, [
+        return $this->isVoid || in_array($this->tag, [
             'area', 'base', 'br', 'col', 'embed', 'hr',
             'img', 'input', 'keygen', 'link', 'menuitem',
             'meta', 'param', 'source', 'track', 'wbr',
