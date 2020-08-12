@@ -560,4 +560,16 @@ abstract class BaseElement implements Htmlable, HtmlElement
             }
         }
     }
+
+    /**
+     * @param bool $required
+     *
+     * @return static
+     */
+    public function required($required = true)
+    {
+        return $required
+            ? $this->attribute('required')
+            : $this->forgetAttribute('required');
+    }
 }
